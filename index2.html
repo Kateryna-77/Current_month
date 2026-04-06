@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Каста | Рутінка 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f0f4fa;color:#1f2937;font-size:13px}
+header{background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px}
+header h1{font-size:20px;font-weight:700;letter-spacing:.5px}
+header span{opacity:.7;font-size:13px}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 16px;gap:4px;position:sticky;top:0;z-index:100;box-shadow:0 2px 4px rgba(0,0,0,.06)}
+.tab{padding:12px 18px;cursor:pointer;border-bottom:3px solid transparent;font-weight:500;color:#64748b;transition:.2s;font-size:13px;margin-bottom:-2px}
+.tab.active{color:#2563eb;border-color:#2563eb}
+.tab:hover:not(.active){color:#1e40af;background:#f8fafc}
+.content{padding:16px;display:none}
+.content.active{display:block}
+.kpi-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border-radius:10px;padding:12px 16px;flex:1;min-width:120px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid #2563eb}
+.kpi.green{border-color:#10b981}.kpi.orange{border-color:#f59e0b}.kpi.purple{border-color:#8b5cf6}.kpi.red{border-color:#ef4444}.kpi.teal{border-color:#14b8a6}
+.kpi-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.kpi-val{font-size:22px;font-weight:700;color:#1e293b}
+.kpi-sub{font-size:11px;color:#94a3b8;margin-top:2px}
+.section{background:#fff;border-radius:10px;padding:14px 16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.section h3{font-size:13px;font-weight:600;color:#374151;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f1f5f9}
+.chart-wrap{position:relative;height:220px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#f8fafc;color:#64748b;font-weight:600;padding:8px 10px;text-align:left;border-bottom:2px solid #e2e8f0;position:sticky;top:0;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+td{padding:7px 10px;border-bottom:1px solid #f1f5f9;color:#374151}
+tr:hover td{background:#fafbff}
+tr:last-child td{border-bottom:none}
+.tbl-wrap{max-height:320px;overflow-y:auto;border-radius:6px;border:1px solid #e2e8f0}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:500}
+.badge-green{background:#d1fae5;color:#065f46}.badge-red{background:#fee2e2;color:#991b1b}
+.badge-blue{background:#dbeafe;color:#1e40af}.badge-orange{background:#ffedd5;color:#9a3412}
+.badge-purple{background:#ede9fe;color:#5b21b6}.badge-gray{background:#f1f5f9;color:#475569}
+.badge-warn{background:#fef3c7;color:#92400e}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.compare-box{background:#f8fafc;border-radius:8px;padding:12px 14px;border:1px solid #e2e8f0}
+.compare-box h4{font-size:12px;color:#64748b;margin-bottom:8px;font-weight:600}
+.compare-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+.compare-row span:first-child{color:#64748b}
+.compare-row span:last-child{font-weight:600;color:#1e293b}
+.warn-row td{background:#fffbeb!important}
+.highlight-row td{background:#eff6ff!important}
+.pct-bar{display:inline-block;background:#e0e7ff;border-radius:3px;height:8px;vertical-align:middle;margin-right:4px}
+.tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:500;background:#f0fdf4;color:#166534}
+.tag.no{background:#fef2f2;color:#991b1b}
+.tag.partial{background:#fffbeb;color:#92400e}
+.comp-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center}
+.comp-card .val{font-size:20px;font-weight:700;margin:4px 0}
+.comp-card .lbl{font-size:11px;color:#64748b}
+.comp-card.cb .val{color:#10b981}
+.comp-card.kvc .val{color:#2563eb}
+.camp-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px}
+.camp-cb{background:#d1fae5;color:#065f46}
+.camp-kvc{background:#dbeafe;color:#1e40af}
+.camp-disc{background:#ede9fe;color:#5b21b6}
+.camp-other{background:#f1f5f9;color:#475569}
+</style>
+</head>
+<body>
+
+<header>
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="7" fill="rgba(255,255,255,.2)"/><text x="14" y="19" text-anchor="middle" fill="white" font-size="14" font-weight="700">K</text></svg>
+  <div>
+    <h1>Рутінка — Електроніка</h1>
+    <span>Оновлено: квітень 2026</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(0)">📊 Березень (минулий)</div>
+  <div class="tab" onclick="switchTab(1)">📈 Квітень (поточний)</div>
+  <div class="tab" onclick="switchTab(2)">💳 Оплати та BNPL</div>
+  <div class="tab" onclick="switchTab(3)">🎯 Платний маркетинг</div>
+</div>
+
+<!-- ============ TAB 0: MARCH ============ -->
+<div class="content active" id="tab0">
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Виторг (SR)</div><div class="kpi-val">₴12,748K</div><div class="kpi-sub">березень 1–31</div></div>
+    <div class="kpi green"><div class="kpi-label">Замовлення</div><div class="kpi-val">5 158</div><div class="kpi-sub">середнє ₴2 470 / замовл.</div></div>
+    <div class="kpi purple"><div class="kpi-label">Black</div><div class="kpi-val">48,0%</div><div class="kpi-sub">₴6 121K</div></div>
+    <div class="kpi teal"><div class="kpi-label">Kasta Visa</div><div class="kpi-val">13,8%</div><div class="kpi-sub">₴1 757K</div></div>
+    <div class="kpi orange"><div class="kpi-label">Short BNPL</div><div class="kpi-val">11,4%</div><div class="kpi-sub">₴1 455K</div></div>
+    <div class="kpi red"><div class="kpi-label">L-BNPL</div><div class="kpi-val">2,2%</div><div class="kpi-sub">₴277K (підкл. з 21.03)</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="section">
+      <h3>Щоденний виторг — березень</h3>
+      <div class="chart-wrap"><canvas id="marDailyChart"></canvas></div>
+    </div>
+    <div class="section">
+      <h3>Топ категорій (Kind)</h3>
+      <div class="tbl-wrap">
+        <table id="marKindTbl"></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Постачальники березня</h3>
+    <div class="tbl-wrap">
+      <table id="marSupTbl"></table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB 1: APRIL ============ -->
+<div class="content" id="tab1">
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Виторг 1–4 квітня</div><div class="kpi-val">₴1 099K</div><div class="kpi-sub">avg/день ₴274K</div></div>
+    <div class="kpi green"><div class="kpi-label">Замовлення</div><div class="kpi-val">465</div><div class="kpi-sub">~116/день</div></div>
+    <div class="kpi purple"><div class="kpi-label">Black</div><div class="kpi-val">58,9%</div><div class="kpi-sub">₴647K (+11pp vs берез.)</div></div>
+    <div class="kpi teal"><div class="kpi-label">Kasta Visa</div><div class="kpi-val">18,4%</div><div class="kpi-sub">₴202K (+4,6pp)</div></div>
+    <div class="kpi orange"><div class="kpi-label">Short BNPL</div><div class="kpi-val">12,8%</div><div class="kpi-sub">₴140K</div></div>
+    <div class="kpi red"><div class="kpi-label">⚠️ L-BNPL</div><div class="kpi-val">19,6%</div><div class="kpi-sub">₴215K — дуже високо!</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="section">
+      <h3>Щоденний виторг — квітень (1–4)</h3>
+      <div class="chart-wrap"><canvas id="aprDailyChart"></canvas></div>
+    </div>
+    <div class="section">
+      <h3>Топ категорій (Kind)</h3>
+      <div class="tbl-wrap">
+        <table id="aprKindTbl"></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Постачальники квітня</h3>
+    <div class="tbl-wrap">
+      <table id="aprSupTbl"></table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB 2: PAYMENTS ============ -->
+<div class="content" id="tab2">
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Картка (prepaid)</div><div class="kpi-val">72,4%</div><div class="kpi-sub">₴9 228K березень</div></div>
+    <div class="kpi green"><div class="kpi-label">Готівка</div><div class="kpi-val">14,0%</div><div class="kpi-sub">₴1 787K березень</div></div>
+    <div class="kpi orange"><div class="kpi-label">Short BNPL</div><div class="kpi-val">11,4%</div><div class="kpi-sub">₴1 455K березень</div></div>
+    <div class="kpi red"><div class="kpi-label">L-BNPL (довге)</div><div class="kpi-val">2,2%</div><div class="kpi-sub">₴277K березень</div></div>
+  </div>
+
+  <div class="section">
+    <h3>L-BNPL: вплив підключення (21 березня)</h3>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="compare-box">
+        <h4>До 21.03 (1–20 березня) — SR ₴5 807K</h4>
+        <div class="compare-row"><span>Short BNPL</span><span>17,6% &nbsp;₴1 025K</span></div>
+        <div class="compare-row"><span>Long BNPL</span><span>0,3% &nbsp;₴17K</span></div>
+        <div class="compare-row"><span>Разом BNPL</span><span>17,9%</span></div>
+      </div>
+      <div class="compare-box" style="border-color:#fca5a5;background:#fff5f5">
+        <h4>Після 21.03 (21–31 березня) — SR ₴6 941K</h4>
+        <div class="compare-row"><span>Short BNPL</span><span>6,2% &nbsp;₴431K ↓</span></div>
+        <div class="compare-row"><span>Long BNPL</span><span style="color:#ef4444;font-weight:700">3,7% &nbsp;₴260K ↑</span></div>
+        <div class="compare-row"><span>Разом BNPL</span><span>9,9% ↓ (Short тиснуть вниз)</span></div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:#64748b;margin-bottom:12px">💡 L-BNPL підключили 21.03. Short BNPL впав (частина покупців переключилась), Long BNPL зріс. У квітні Long BNPL вже 19,6% — головним чином Tehnopost (47,9% продажів через L-BNPL).</p>
+    <div class="chart-wrap" style="height:200px"><canvas id="bnplDailyChart"></canvas></div>
+  </div>
+
+  <div class="section">
+    <h3>L-BNPL по постачальниках — статус і березневі продажі</h3>
+    <div class="tbl-wrap">
+      <table id="lbnplSupTbl"></table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB 3: MARKETING ============ -->
+<div class="content" id="tab3">
+  <div class="grid3" style="margin-bottom:14px">
+    <div class="comp-card cb">
+      <div class="lbl">Кешбек (CB) — компенсація березень</div>
+      <div class="val">₴35 390</div>
+      <div class="lbl">постачальники повертають CB</div>
+    </div>
+    <div class="comp-card kvc">
+      <div class="lbl">KVC (Kasta Visa) — компенсація березень</div>
+      <div class="val">₴12 833</div>
+      <div class="lbl">за замовлення карткою Kasta</div>
+    </div>
+    <div class="comp-card" style="background:#f8fafc">
+      <div class="lbl">Разом компенсацій березень</div>
+      <div class="val" style="color:#374151">₴48 223</div>
+      <div class="lbl">CB + KVC від постачальників</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="section">
+      <h3>Компенсація Кешбек (CB) — березень</h3>
+      <div class="tbl-wrap">
+        <table id="cbCompTbl"></table>
+      </div>
+    </div>
+    <div class="section">
+      <h3>Компенсація KVC — березень</h3>
+      <div class="tbl-wrap">
+        <table id="kvcCompTbl"></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Угоди з платного маркетингу — березень / квітень</h3>
+    <div style="margin-bottom:8px;font-size:11px;color:#64748b">
+      <span class="camp-cb" style="border-radius:4px;padding:1px 7px;margin-right:6px">Кешбек</span>
+      <span class="camp-kvc" style="border-radius:4px;padding:1px 7px;margin-right:6px">KVC/Карта</span>
+      <span class="camp-disc" style="border-radius:4px;padding:1px 7px;margin-right:6px">Знижка</span>
+      <span class="camp-other" style="border-radius:4px;padding:1px 7px">Інше</span>
+    </div>
+    <div class="tbl-wrap" style="max-height:440px">
+      <table id="mktTbl"></table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== DATA ======
+
+// MARCH daily SR, Short BNPL, Long BNPL
+const MAR_DAYS = Array.from({length:31},(_,i)=>i+1);
+const MAR_DAILY_SR = [245279,389781,270845,389334,328610,366261,246105,210173,172574,298681,184196,249765,170410,154830,180905,247954,210887,237552,214809,1038200,1779105,1030546,663323,562577,558057,472673,435626,415428,208093,415189,400231];
+const MAR_DAILY_SHORT = [56310,74392,40937,45016,62035,76972,43399,59789,42152,72015,55604,48463,34019,21395,50882,43751,31296,36554,56153,73664,36806,32957,59793,14409,68551,23974,71439,46123,18281,19460,38754];
+const MAR_DAILY_LONG = [0,0,0,0,309,2296,0,0,2270,2051,419,136,678,1069,0,0,0,8198,0,0,17429,47793,47454,28755,6920,26762,2448,8827,16792,3816,52962];
+
+// APRIL daily SR (1-4)
+const APR_DAYS = [1,2,3,4];
+const APR_DAILY_SR = [311831,298841,272323,215924];
+
+// MARCH suppliers (top 15)
+const MAR_SUPS = [
+  {name:'Фокстрот',sr:4228825,orders:1470,black:51,kvc:15,short:20,long:0,lbnpl:'Не підкл.'},
+  {name:'Tehnopost',sr:3103066,orders:674,black:43,kvc:10,short:6,long:7,lbnpl:'3 міс.'},
+  {name:'Кібернетики',sr:1291894,orders:269,black:35,kvc:8,short:12,long:0,lbnpl:'Не підкл.'},
+  {name:'ТАРАСОВ О.О.',sr:495383,orders:534,black:47,kvc:14,short:6,long:2,lbnpl:'3 міс.'},
+  {name:'ТП',sr:420405,orders:94,black:48,kvc:11,short:5,long:0,lbnpl:'Не підкл.'},
+  {name:'Gou',sr:347542,orders:361,black:59,kvc:13,short:10,long:1,lbnpl:'3 міс.'},
+  {name:'Паршко С.П.',sr:339259,orders:106,black:59,kvc:11,short:6,long:0,lbnpl:'Не підкл.'},
+  {name:'EuroHim',sr:286088,orders:81,black:33,kvc:4,short:8,long:0,lbnpl:'3 міс.'},
+  {name:'Якубовська Ю.Ю.',sr:252314,orders:170,black:57,kvc:14,short:11,long:1,lbnpl:'3 міс.'},
+  {name:'Будпостач',sr:246027,orders:70,black:30,kvc:2,short:0,long:0,lbnpl:'Не підкл.'},
+  {name:'SKLEP',sr:228380,orders:11,black:91,kvc:80,short:2,long:0,lbnpl:'6 міс.'},
+  {name:'ТАКУ М.Д.',sr:143039,orders:137,black:50,kvc:11,short:7,long:0,lbnpl:'Не підкл.'},
+  {name:'ФОП АБОЯН',sr:129933,orders:42,black:59,kvc:12,short:3,long:16,lbnpl:'10 міс.'},
+  {name:'ТАКУ ІГОР',sr:124872,orders:110,black:54,kvc:13,short:0,long:0,lbnpl:'Не підкл.'},
+  {name:'АРУТЮНЯН А.Л.',sr:121984,orders:236,black:69,kvc:22,short:9,long:1,lbnpl:'4 міс.'},
+];
+
+// APRIL suppliers (top 15)
+const APR_SUPS = [
+  {name:'Фокстрот',sr:462564,orders:164,black:63,kvc:20,short:26,long:0,lbnpl:'Не підкл.'},
+  {name:'Tehnopost',sr:379546,orders:79,black:41,kvc:8,short:1,long:48,lbnpl:'3 міс.'},
+  {name:'ТАРАСОВ О.О.',sr:42314,orders:35,black:55,kvc:12,short:3,long:15,lbnpl:'3 міс.'},
+  {name:'Кібернетики',sr:38138,orders:12,black:40,kvc:10,short:18,long:0,lbnpl:'Не підкл.'},
+  {name:'Паршко С.П.',sr:30131,orders:9,black:70,kvc:15,short:2,long:0,lbnpl:'Не підкл.'},
+  {name:'Gou',sr:13202,orders:15,black:62,kvc:18,short:18,long:24,lbnpl:'3 міс.'},
+  {name:'АРУТЮНЯН А.Л.',sr:13157,orders:26,black:72,kvc:25,short:4,long:9,lbnpl:'4 міс.'},
+  {name:'Якубовська Ю.Ю.',sr:12251,orders:14,black:58,kvc:16,short:0,long:25,lbnpl:'3 міс.'},
+  {name:'ТАКУ ІГОР',sr:12211,orders:13,black:62,kvc:15,short:0,long:0,lbnpl:'Не підкл.'},
+  {name:'КАРАМАРКОВ Г.М.',sr:12184,orders:24,black:55,kvc:14,short:0,long:10,lbnpl:'без обм.'},
+  {name:'Будпостач',sr:11398,orders:2,black:32,kvc:3,short:0,long:0,lbnpl:'Не підкл.'},
+  {name:'EuroHim',sr:11055,orders:7,black:35,kvc:5,short:0,long:35,lbnpl:'3 міс.'},
+  {name:'ТП',sr:9254,orders:5,black:52,kvc:12,short:0,long:55,lbnpl:'Не підкл.'},
+  {name:'ФОП АБОЯН',sr:8198,orders:2,black:60,kvc:14,short:0,long:50,lbnpl:'10 міс.'},
+  {name:'ТАКУ М.Д.',sr:7386,orders:6,black:53,kvc:12,short:32,long:0,lbnpl:'Не підкл.'},
+];
+
+// MARCH kinds (top 20)
+const MAR_KINDS = [
+  {name:'Смартфон',sub:'Смартфони',sr:3348917,orders:479},
+  {name:'Телевізор',sub:'Телевізори',sr:811488,orders:101},
+  {name:'Холодильник',sub:'Холод./Морозилки',sr:667377,orders:44},
+  {name:'Пилосос',sub:'Пилососи',sr:534409,orders:193},
+  {name:'Планшет',sub:'Планшети',sr:480692,orders:82},
+  {name:'Мультипіч',sub:'Техніка для кухні',sr:442300,orders:118},
+  {name:'Пральна машина',sub:'Пральні машини',sr:427275,orders:43},
+  {name:'Мікрохвильова піч',sub:'Мікрохвильові',sr:379889,orders:150},
+  {name:'Блендер',sub:'Техніка для кухні',sr:267413,orders:234},
+  {name:'Ноутбук',sub:'Ноутбуки',sr:254448,orders:11},
+  {name:'Зарядна станція',sub:'Зарядні станції',sr:243567,orders:13},
+  {name:'Мультиварка',sub:'Техніка для кухні',sr:206566,orders:90},
+  {name:'Електрочайник',sub:'Техніка для кухні',sr:181348,orders:267},
+  {name:'М\'ясорубка',sub:'Техніка для кухні',sr:174425,orders:68},
+  {name:'Фен',sub:'Краса та здоров\'я',sr:152559,orders:129},
+  {name:'Міксер',sub:'Техніка для кухні',sr:146678,orders:114},
+  {name:'Праска',sub:'Праски',sr:144552,orders:99},
+  {name:'Машинка для стрижки',sub:'Краса та здоров\'я',sr:142843,orders:145},
+  {name:'Смарт-годинник',sub:'Носимі пристрої',sr:137805,orders:68},
+  {name:'Мобільний телефон',sub:'Мобільні телефони',sr:128973,orders:42},
+];
+
+// APRIL kinds (top 15)
+const APR_KINDS = [
+  {name:'Смартфон',sub:'Смартфони',sr:298208,orders:75},
+  {name:'Телевізор',sub:'Телевізори',sr:86605,orders:11},
+  {name:'Мультипіч',sub:'Техніка для кухні',sr:51301,orders:14},
+  {name:'Праска',sub:'Праски',sr:43584,orders:30},
+  {name:'Пилосос',sub:'Пилососи',sr:38060,orders:14},
+  {name:'Фен',sub:'Краса та здоров\'я',sr:36106,orders:28},
+  {name:'Планшет',sub:'Планшети',sr:35066,orders:6},
+  {name:'Блендер',sub:'Техніка для кухні',sr:29170,orders:25},
+  {name:'Мікрохвильова піч',sub:'Мікрохвильові',sr:28275,orders:11},
+  {name:'Кавомашина',sub:'Техніка для кухні',sr:27215,orders:5},
+  {name:'Плита',sub:'Плити',sr:24181,orders:4},
+  {name:'Пральна машина',sub:'Пральні машини',sr:20401,orders:2},
+  {name:'Внутр. SSD',sub:'Комп\'ютери',sr:17251,orders:7},
+  {name:'Пароочищувач',sub:'Прибирання',sr:16793,orders:5},
+  {name:'Смарт-годинник',sub:'Носимі пристрої',sr:16526,orders:8},
+];
+
+// L-BNPL supplier table
+const LBNPL_SUPS = [
+  {name:'Tehnopost',status:'Підключено, 3 міс.',mar_long:218765,apr_long:181739,apr_sr:379546},
+  {name:'ТАРАСОВ О.О.',status:'Підключено, 3 міс.',mar_long:9908,apr_long:6347,apr_sr:42314},
+  {name:'Gou',status:'Підключено, 3 міс.',mar_long:3475,apr_long:3168,apr_sr:13202},
+  {name:'EuroHim',status:'Підключено, 3 міс.',mar_long:0,apr_long:3869,apr_sr:11055},
+  {name:'Якубовська Ю.Ю.',status:'Підключено, 3 міс.',mar_long:2523,apr_long:3063,apr_sr:12251},
+  {name:'SKLEP',status:'Підключено, 6 міс.',mar_long:0,apr_long:0,apr_sr:0},
+  {name:'КАРАМАРКОВ Г.М.',status:'Підключено, без обм.',mar_long:0,apr_long:1218,apr_sr:12184},
+  {name:'АРУТЮНЯН А.Л.',status:'Підключено, 4 міс.',mar_long:1220,apr_long:1184,apr_sr:13157},
+  {name:'ФОП АБОЯН',status:'Підключено, 10 міс.',mar_long:20789,apr_long:4099,apr_sr:8198},
+  {name:'ОТЯН О.А.',status:'Підключено, 3 міс.',mar_long:0,apr_long:0,apr_sr:0},
+  {name:'am-kasta',status:'Підключено, 3 міс.',mar_long:0,apr_long:0,apr_sr:0},
+  {name:'СОБЧИНСЬКИЙ Ю.В.',status:'Підключено, 3 міс.',mar_long:0,apr_long:0,apr_sr:0},
+  {name:'Дробін С.В.',status:'Підключено, 4 міс.',mar_long:0,apr_long:0,apr_sr:0},
+  {name:'Кузічкін О.О.',status:'Підключено, 4 міс.',mar_long:0,apr_long:0,apr_sr:0},
+  {name:'Будь Здоровим',status:'Підключено, 3 міс.',mar_long:0,apr_long:0,apr_sr:0},
+  {name:'ГАНІЧ АЛІНА',status:'Включили, 6 міс.',mar_long:0,apr_long:0,apr_sr:0},
+  {name:'ДІДУХ І.М.',status:'Підключили, 3 міс.',mar_long:0,apr_long:0,apr_sr:0},
+  {name:'Fishki.ua',status:'Підключили, 4 міс.',mar_long:0,apr_long:0,apr_sr:0},
+  {name:'SVEN',status:'Підключили, 3 міс.',mar_long:0,apr_long:0,apr_sr:0},
+  {name:'Lugi',status:'Підключено, 5 міс.',mar_long:0,apr_long:0,apr_sr:0},
+  {name:'Теплокомфорт',status:'На кондиціонери',mar_long:0,apr_long:0,apr_sr:0},
+  // Not connected
+  {name:'Фокстрот',status:'Не підключили',mar_long:0,apr_long:0,apr_sr:462564},
+  {name:'Кібернетики',status:'Не підключили',mar_long:0,apr_long:0,apr_sr:38138},
+  {name:'Будпостач',status:'Не підключили',mar_long:0,apr_long:0,apr_sr:11398},
+  {name:'ТП',status:'Не підключили',mar_long:0,apr_long:5095,apr_sr:9254},
+  {name:'Паршко С.П.',status:'Не підключили',mar_long:0,apr_long:0,apr_sr:30131},
+  {name:'ТАКУ М.Д.',status:'Не підключили',mar_long:0,apr_long:0,apr_sr:7386},
+  {name:'ТАКУ ІГОР',status:'Не підключили',mar_long:0,apr_long:0,apr_sr:12211},
+  {name:'Tv Shop',status:'Не підключили',mar_long:0,apr_long:0,apr_sr:0},
+];
+
+// CB compensation
+const CB_COMP = [
+  {name:'АРУТЮНЯН А.Л.',comp:9308.70},
+  {name:'ТАКУ М.Д.',comp:6712.70},
+  {name:'Gou',comp:6090.96},
+  {name:'ТАКУ ІГОР',comp:4808.05},
+  {name:'Tv Shop',comp:1945.30},
+  {name:'ОТЯН О.А.',comp:1093.30},
+  {name:'КАРАМАРКОВ Г.М.',comp:934.45},
+  {name:'ГАНІЧ АЛІНА',comp:293.86},
+  {name:'Міхов О.О.',comp:181.45},
+  {name:'Fishki.ua',comp:144.90},
+  {name:'SKLEP',comp:66.90},
+  {name:'Отян А.О.',comp:58.00},
+];
+
+// KVC compensation
+const KVC_COMP = [
+  {name:'SKLEP',comp:8797.00},
+  {name:'Gou',comp:2113.55},
+  {name:'АРУТЮНЯН А.Л.',comp:1372.00},
+  {name:'Tv Shop',comp:282.55},
+  {name:'ДІДУХ І.М.',comp:159.85},
+  {name:'ГАНІЧ АЛІНА',comp:108.50},
+];
+
+// Marketing campaigns
+const MARKETING = [
+  {month:'лютий',sup:'SKLEP',from:'26.02',to:'09.03',cond:'КВК 5%'},
+  {month:'березень',sup:'ФОП АБОЯН',from:'05.03',to:'05.03',cond:'КВК 5%'},
+  {month:'березень',sup:'ГАНІЧ АЛІНА',from:'05.03',to:'08.03',cond:'Кешбек 7%'},
+  {month:'березень',sup:'АРУТЮНЯН А.Л.',from:'06.03',to:'09.03',cond:'Kaста Kарта 10%'},
+  {month:'березень',sup:'Gou',from:'07.03',to:'08.03',cond:'Кешбек 5%'},
+  {month:'березень',sup:'ДІДУХ І.М.',from:'06.03',to:'08.03',cond:'Каста Карта 5%'},
+  {month:'березень',sup:'Міхов О.О.',from:'07.03',to:'08.03',cond:'Кешбек 5%'},
+  {month:'березень',sup:'Отян А.О.',from:'07.03',to:'08.03',cond:'Кешбек 5%'},
+  {month:'березень',sup:'Карамарков',from:'07.03',to:'08.03',cond:'Кешбек 5%'},
+  {month:'березень',sup:'TV Shop',from:'07.03',to:'08.03',cond:'Каста Карта 5%'},
+  {month:'березень',sup:'ФОП Духота',from:'07.03',to:'08.03',cond:'Каста Карта 5%'},
+  {month:'березень',sup:'SKLEP',from:'10.03',to:'25.03',cond:'КВК 5%'},
+  {month:'березень',sup:'TV Shop',from:'10.03',to:'16.03',cond:'Каста Карта 5%'},
+  {month:'березень',sup:'Таку Ігор',from:'10.03',to:'25.03',cond:'Кешбек 5%'},
+  {month:'березень',sup:'Таку М.Д.',from:'10.03',to:'25.03',cond:'Кешбек 5%'},
+  {month:'березень',sup:'ФОП АБОЯН',from:'11.03',to:'31.03',cond:'КВК 10%'},
+  {month:'березень',sup:'EuroHim',from:'12.03',to:'25.03',cond:'1% знижки'},
+  {month:'березень',sup:'ДІДУХ І.М.',from:'10.03',to:'16.03',cond:'Каста Карта 5%'},
+  {month:'березень',sup:'Tehnopost',from:'11.03',to:'25.03',cond:'Акційні ціни'},
+  {month:'березень',sup:'Gou',from:'11.03',to:'25.03',cond:'КВК 5%'},
+  {month:'березень',sup:'АРУТЮНЯН А.Л.',from:'11.03',to:'12.03',cond:'КВК 15%'},
+  {month:'березень',sup:'АРУТЮНЯН А.Л.',from:'13.03',to:'16.03',cond:'КВК/Кешбек 10%'},
+  {month:'березень',sup:'АРУТЮНЯН А.Л.',from:'17.03',to:'17.03',cond:'КВК 15%'},
+  {month:'березень',sup:'ГАНІЧ АЛІНА',from:'13.03',to:'16.03',cond:'КВК 7%'},
+  {month:'березень',sup:'TV Shop',from:'17.03',to:'25.03',cond:'Кешбек 5%'},
+  {month:'березень',sup:'АРУТЮНЯН А.Л.',from:'18.03',to:'25.03',cond:'Кешбек 15%'},
+  {month:'березень',sup:'Fishki.ua',from:'18.03',to:'25.03',cond:'Кешбек 5%'},
+  {month:'березень',sup:'КАРАМАРКОВ',from:'18.03',to:'25.03',cond:'Знижка 5%'},
+  {month:'березень',sup:'ОТЯН О.А.',from:'18.03',to:'25.03',cond:'Знижка 5%'},
+  {month:'березень',sup:'Будпостач',from:'18.03',to:'25.03',cond:'Знижка 7%'},
+  {month:'березень',sup:'Lugi',from:'24.03',to:'30.03',cond:'КБ 5% Sokany'},
+  {month:'березень',sup:'Tehnopost',from:'26.03',to:'01.04',cond:'Акційні ціни'},
+  {month:'березень',sup:'SKLEP',from:'26.03',to:'01.04',cond:'Кешбек 5%'},
+  {month:'березень',sup:'Таку Ігор',from:'26.03',to:'01.04',cond:'Кешбек 5%'},
+  {month:'березень',sup:'Таку М.Д.',from:'26.03',to:'01.04',cond:'Кешбек 5%'},
+  {month:'березень',sup:'EuroHim',from:'26.03',to:'01.04',cond:'1% знижки'},
+  {month:'березень',sup:'АРУТЮНЯН А.Л.',from:'26.03',to:'01.04',cond:'Кешбек 18%'},
+  {month:'березень',sup:'Gou',from:'26.03',to:'01.04',cond:'КВК 5%'},
+  {month:'березень',sup:'КАРАМАРКОВ',from:'26.03',to:'01.04',cond:'Кешбек 5%'},
+  {month:'березень',sup:'ОТЯН О.А.',from:'26.03',to:'01.04',cond:'Кешбек 5%'},
+  {month:'березень',sup:'TV Shop',from:'26.03',to:'30.04',cond:'Видалити з акції'},
+  {month:'квітень',sup:'Будпостач',from:'05.04',to:'12.04',cond:'Знижка 5%'},
+  {month:'квітень',sup:'Таку Ігор',from:'01.04',to:'12.04',cond:'Кешбек 5%'},
+  {month:'квітень',sup:'Таку М.Д.',from:'01.04',to:'12.04',cond:'Кешбек 5%'},
+  {month:'квітень',sup:'ДЕМ\'ЯНЕНКО_ХОП',from:'01.04',to:'12.04',cond:'Знижка 1%'},
+  {month:'квітень',sup:'EuroHim',from:'01.04',to:'12.04',cond:'1% знижки'},
+  {month:'квітень',sup:'АРУТЮНЯН А.Л.',from:'01.04',to:'12.04',cond:'Знижка 20%'},
+  {month:'квітень',sup:'КАРАМАРКОВ',from:'01.04',to:'12.04',cond:'Знижка 5%'},
+  {month:'квітень',sup:'ОТЯН О.А.',from:'01.04',to:'12.04',cond:'Знижка 5%'},
+  {month:'квітень',sup:'Gou',from:'01.04',to:'04.04',cond:'КВК 5%'},
+  {month:'квітень',sup:'Gou',from:'05.04',to:'12.04',cond:'Кешбек 8%'},
+  {month:'квітень',sup:'ФОП АБОЯН',from:'01.04',to:'12.04',cond:'Знижка 5-10%'},
+  {month:'квітень',sup:'Дробін С.В.',from:'01.04',to:'12.04',cond:'Знижка 5% смартфони'},
+  {month:'квітень',sup:'Fishki.ua',from:'01.04',to:'12.04',cond:'Знижка 5%'},
+  {month:'квітень',sup:'Теплокомфорт',from:'01.04',to:'12.04',cond:'Знижка 5% Chigo'},
+];
+
+// ====== HELPERS ======
+const fmt = n => '₴'+Math.round(n).toLocaleString('uk-UA');
+const fmtK = n => '₴'+(n/1000).toFixed(0)+'K';
+const pct = (a,b) => b>0?(a/b*100).toFixed(1)+'%':'—';
+const bar = (pct,color='#818cf8') => `<span class="pct-bar" style="width:${Math.min(pct,100)*0.8}px;background:${color}"></span>`;
+
+function lbnplTag(s){
+  if(!s||s==='Не підкл.'||s.startsWith('Не')) return `<span class="tag no">Не підкл.</span>`;
+  if(s.startsWith('На ')) return `<span class="tag partial">${s}</span>`;
+  return `<span class="tag">${s}</span>`;
+}
+
+function condTag(cond){
+  const c=cond.toLowerCase();
+  if(c.includes('кешбек')||c.includes('кб')||c.includes('cb')) return `<span class="camp-cb">${cond}</span>`;
+  if(c.includes('кваста')||c.includes('квк')||c.includes('карта')||c.includes('kvc')) return `<span class="camp-kvc">${cond}</span>`;
+  if(c.includes('знижк')||c.includes('акційн')||c.includes('%')) return `<span class="camp-disc">${cond}</span>`;
+  return `<span class="camp-other">${cond}</span>`;
+}
+
+// ====== RENDER TABLES ======
+function renderMarSup(){
+  const t=document.getElementById('marSupTbl');
+  const total=MAR_SUPS.reduce((s,d)=>s+d.sr,0);
+  t.innerHTML=`<thead><tr><th>Постачальник</th><th>SR</th><th>%</th><th>Замовл.</th><th>Black</th><th>KVC</th><th>Short BNPL</th><th>L-BNPL</th><th>L-BNPL статус</th></tr></thead><tbody>${
+    MAR_SUPS.map(d=>`<tr>
+      <td><strong>${d.name}</strong></td>
+      <td>${fmtK(d.sr)}</td>
+      <td>${bar(d.sr/total*100,'#c7d2fe')}${(d.sr/total*100).toFixed(1)}%</td>
+      <td>${d.orders}</td>
+      <td><span style="color:#7c3aed;font-weight:500">${d.black}%</span></td>
+      <td>${d.kvc}%</td>
+      <td>${d.short}%</td>
+      <td>${d.long>0?`<span style="color:#ef4444;font-weight:600">${d.long}%</span>`:'—'}</td>
+      <td>${lbnplTag(d.lbnpl)}</td>
+    </tr>`).join('')
+  }</tbody>`;
+}
+
+function renderAprSup(){
+  const t=document.getElementById('aprSupTbl');
+  const total=APR_SUPS.reduce((s,d)=>s+d.sr,0);
+  t.innerHTML=`<thead><tr><th>Постачальник</th><th>SR</th><th>%</th><th>Замовл.</th><th>Black</th><th>KVC</th><th>Short BNPL</th><th>⚠️ L-BNPL</th><th>L-BNPL статус</th></tr></thead><tbody>${
+    APR_SUPS.map(d=>`<tr class="${d.long>=20?'warn-row':''}">
+      <td><strong>${d.name}</strong></td>
+      <td>${fmtK(d.sr)}</td>
+      <td>${bar(d.sr/total*100,'#c7d2fe')}${(d.sr/total*100).toFixed(1)}%</td>
+      <td>${d.orders}</td>
+      <td><span style="color:#7c3aed;font-weight:500">${d.black}%</span></td>
+      <td>${d.kvc}%</td>
+      <td>${d.short}%</td>
+      <td>${d.long>=20?`<span style="color:#ef4444;font-weight:700">${d.long}%⚠️</span>`:d.long>0?`<span style="color:#f59e0b;font-weight:600">${d.long}%</span>`:'—'}</td>
+      <td>${lbnplTag(d.lbnpl)}</td>
+    </tr>`).join('')
+  }</tbody>`;
+}
+
+function renderKindTbl(id, data, total_sr){
+  const total=data.reduce((s,d)=>s+d.sr,0);
+  document.getElementById(id).innerHTML=`<thead><tr><th>Kind</th><th>Підгрупа</th><th>SR</th><th>%</th><th>Замовл.</th></tr></thead><tbody>${
+    data.map(d=>`<tr>
+      <td><strong>${d.name}</strong></td><td style="color:#64748b">${d.sub}</td>
+      <td>${fmtK(d.sr)}</td>
+      <td>${bar(d.sr/total*100,'#a5b4fc')}${(d.sr/total*100).toFixed(1)}%</td>
+      <td>${d.orders}</td>
+    </tr>`).join('')
+  }</tbody>`;
+}
+
+function renderLbnplSup(){
+  const t=document.getElementById('lbnplSupTbl');
+  t.innerHTML=`<thead><tr><th>Постачальник</th><th>Статус L-BNPL</th><th>L-BNPL берез. (SR)</th><th>L-BNPL квіт. (SR)</th><th>Квіт. SR всього</th><th>L-BNPL квіт. %</th></tr></thead><tbody>${
+    LBNPL_SUPS.map(d=>{
+      const pctApr=d.apr_sr>0?(d.apr_long/d.apr_sr*100).toFixed(0):0;
+      const warn=d.apr_long>0&&d.status.startsWith('Не');
+      return `<tr class="${d.apr_long>=50000?'warn-row':d.status.startsWith('Не')?'':'highlight-row'}">
+        <td><strong>${d.name}</strong></td>
+        <td>${lbnplTag(d.status)}</td>
+        <td>${d.mar_long>0?fmt(d.mar_long):'—'}</td>
+        <td>${d.apr_long>0?`<span style="${warn?'color:#ef4444;font-weight:700':'color:#2563eb;font-weight:600'}">${fmt(d.apr_long)}</span>`:'—'}</td>
+        <td>${d.apr_sr>0?fmt(d.apr_sr):'—'}</td>
+        <td>${d.apr_sr>0&&d.apr_long>0?`<span style="${pctApr>=30?'color:#ef4444;font-weight:700':'color:#374151'}">${pctApr}%</span>`:'—'}</td>
+      </tr>`;
+    }).join('')
+  }</tbody>`;
+}
+
+function renderCbComp(){
+  const total=CB_COMP.reduce((s,d)=>s+d.comp,0);
+  document.getElementById('cbCompTbl').innerHTML=`<thead><tr><th>Постачальник</th><th>Компенсація CB</th><th>% від total</th></tr></thead><tbody>${
+    CB_COMP.map(d=>`<tr><td>${d.name}</td><td style="font-weight:600;color:#059669">₴${d.comp.toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td>${(d.comp/total*100).toFixed(1)}%</td></tr>`).join('')
+  }<tr style="background:#f0fdf4"><td><strong>Всього</strong></td><td style="font-weight:700;color:#059669">₴${total.toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td>100%</td></tr></tbody>`;
+}
+
+function renderKvcComp(){
+  const total=KVC_COMP.reduce((s,d)=>s+d.comp,0);
+  document.getElementById('kvcCompTbl').innerHTML=`<thead><tr><th>Постачальник</th><th>Компенсація KVC</th><th>% від total</th></tr></thead><tbody>${
+    KVC_COMP.map(d=>`<tr><td>${d.name}</td><td style="font-weight:600;color:#2563eb">₴${d.comp.toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td>${(d.comp/total*100).toFixed(1)}%</td></tr>`).join('')
+  }<tr style="background:#eff6ff"><td><strong>Всього</strong></td><td style="font-weight:700;color:#2563eb">₴${total.toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td>100%</td></tr></tbody>`;
+}
+
+function renderMkt(){
+  const colors={'лютий':'#f1f5f9','березень':'#f0fdf4','квітень':'#eff6ff'};
+  document.getElementById('mktTbl').innerHTML=`<thead><tr><th>Місяць</th><th>Постачальник</th><th>З</th><th>До</th><th>Умови</th></tr></thead><tbody>${
+    MARKETING.map(d=>`<tr style="background:${colors[d.month]||'#fff'}">
+      <td><span class="badge ${d.month==='квітень'?'badge-blue':d.month==='березень'?'badge-green':'badge-gray'}">${d.month}</span></td>
+      <td><strong>${d.sup}</strong></td>
+      <td style="color:#64748b;font-size:11px">${d.from}</td>
+      <td style="color:#64748b;font-size:11px">${d.to}</td>
+      <td>${condTag(d.cond)}</td>
+    </tr>`).join('')
+  }</tbody>`;
+}
+
+// ====== CHARTS ======
+function renderMarDailyChart(){
+  const ctx=document.getElementById('marDailyChart').getContext('2d');
+  new Chart(ctx,{type:'bar',data:{
+    labels:MAR_DAYS.map(d=>`${d}`),
+    datasets:[{
+      label:'SR (грн)',data:MAR_DAILY_SR,
+      backgroundColor:MAR_DAYS.map(d=>d>=21?'rgba(37,99,235,0.7)':'rgba(99,102,241,0.5)'),
+      borderRadius:3,borderSkipped:false
+    }]
+  },options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'₴'+Math.round(c.raw).toLocaleString('uk-UA')}}},
+    scales:{y:{ticks:{callback:v=>'₴'+(v/1000).toFixed(0)+'K',font:{size:10}},grid:{color:'#f1f5f9'}},x:{ticks:{font:{size:10}},grid:{display:false}}}
+  }});
+}
+
+function renderAprDailyChart(){
+  const ctx=document.getElementById('aprDailyChart').getContext('2d');
+  new Chart(ctx,{type:'bar',data:{
+    labels:['1 квітня','2 квітня','3 квітня','4 квітня'],
+    datasets:[{
+      label:'SR (грн)',data:APR_DAILY_SR,
+      backgroundColor:['rgba(37,99,235,0.7)','rgba(37,99,235,0.7)','rgba(37,99,235,0.7)','rgba(37,99,235,0.5)'],
+      borderRadius:5,borderSkipped:false
+    }]
+  },options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'₴'+Math.round(c.raw).toLocaleString('uk-UA')}}},
+    scales:{y:{ticks:{callback:v=>'₴'+(v/1000).toFixed(0)+'K',font:{size:11}},grid:{color:'#f1f5f9'}},x:{ticks:{font:{size:12}},grid:{display:false}}}
+  }});
+}
+
+function renderBnplDailyChart(){
+  const ctx=document.getElementById('bnplDailyChart').getContext('2d');
+  new Chart(ctx,{type:'bar',data:{
+    labels:MAR_DAYS.map(d=>`${d}`),
+    datasets:[
+      {label:'Short BNPL',data:MAR_DAILY_SHORT,backgroundColor:'rgba(251,146,60,0.7)',borderRadius:2,borderSkipped:false},
+      {label:'L-BNPL (Long)',data:MAR_DAILY_LONG,backgroundColor:'rgba(239,68,68,0.75)',borderRadius:2,borderSkipped:false}
+    ]
+  },options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{font:{size:11},boxWidth:12}},
+      tooltip:{callbacks:{label:c=>`${c.dataset.label}: ₴${Math.round(c.raw).toLocaleString('uk-UA')}`,
+        afterBody:(items)=>items[0]&&items[0].dataIndex>=20?['↑ L-BNPL підключено 21.03']:[]
+      }},
+      annotation:{annotations:{line1:{type:'line',xMin:19.5,xMax:19.5,borderColor:'#ef4444',borderWidth:2,borderDash:[4,4],
+        label:{content:'21.03 — підкл. L-BNPL',display:true,position:'start',font:{size:10},backgroundColor:'#fef2f2',color:'#ef4444'}}}}
+    },
+    scales:{
+      x:{stacked:true,ticks:{font:{size:9}},grid:{display:false}},
+      y:{stacked:true,ticks:{callback:v=>'₴'+(v/1000).toFixed(0)+'K',font:{size:10}},grid:{color:'#f1f5f9'}}
+    }
+  }});
+}
+
+// ====== TAB SWITCH ======
+function switchTab(i){
+  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));
+  document.querySelectorAll('.content').forEach((c,j)=>c.classList.toggle('active',i===j));
+}
+
+// ====== INIT ======
+renderMarSup();
+renderAprSup();
+renderKindTbl('marKindTbl',MAR_KINDS);
+renderKindTbl('aprKindTbl',APR_KINDS);
+renderLbnplSup();
+renderCbComp();
+renderKvcComp();
+renderMkt();
+renderMarDailyChart();
+renderAprDailyChart();
+renderBnplDailyChart();
+</script>
+</body>
+</html>
